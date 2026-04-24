@@ -1,3 +1,5 @@
+import { authOrigin, signIn } from "@/auth";
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
@@ -7,7 +9,7 @@ export default function HomePage() {
         </p>
 
         <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-6xl">
-          Map your music taste with your friends
+          Map your music taste through your friends
         </h1>
 
         <p className="mb-8 max-w-2xl text-base text-neutral-300 sm:text-lg">
@@ -15,15 +17,21 @@ export default function HomePage() {
           and see how similar your listening tastes really are.
         </p>
 
-        <div className="flex gap-4">
-          <button className="rounded-full bg-green-500 px-6 py-3 font-medium text-black transition hover:bg-green-400">
+        <form
+          action={async () => {
+            "use server";
+            await signIn("spotify", {
+              redirectTo: `${authOrigin()}/dashboard`,
+            });
+          }}
+        >
+          <button
+            type="submit"
+            className="rounded-full bg-green-500 px-6 py-3 font-medium text-black transition hover:bg-green-400"
+          >
             Sign in with Spotify
           </button>
-
-          <button className="rounded-full border border-neutral-700 px-6 py-3 font-medium text-white transition hover:bg-neutral-900">
-            Learn More
-          </button>
-        </div>
+        </form>
       </div>
     </main>
   );
