@@ -19,4 +19,42 @@ model User {
   image         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  topArtists TopArtist[]
+  topTracks  TopTrack[]
+}
+
+model TopArtist {
+  id              String   @id @default(cuid())
+  userId          String
+  spotifyArtistId String
+  name            String
+  image           String?
+  genres          String[]
+  popularity      Int?
+  rank            Int
+  timeRange       String
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spotifyArtistId, timeRange])
+}
+
+model TopTrack {
+  id             String   @id @default(cuid())
+  userId         String
+  spotifyTrackId String
+  name           String
+  artistNames    String[]
+  albumName      String?
+  image          String?
+  popularity     Int?
+  rank           Int
+  timeRange      String
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spotifyTrackId, timeRange])
 }

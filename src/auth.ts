@@ -131,5 +131,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
     },
+    async jwt({ token, account, profile }) {
+      if (account?.access_token) {
+        token.accessToken = account.access_token;
+      }
+
+      if (profile?.id) {
+        token.spotifyUserId = profile.id;
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken as string;
+      session.spotifyUserId = token.spotifyUserId as string;
+
+      return session;
+    },
   },
 });

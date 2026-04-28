@@ -1,5 +1,6 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
+import { RefreshSpotifyButton } from "./RefreshSpotifyButton";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -24,6 +25,7 @@ export default async function DashboardPage() {
               className="mt-4 h-16 w-16 rounded-full"
             />
           ) : null}
+          <RefreshSpotifyButton />
         </div>
 
         <form
