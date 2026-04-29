@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentDbUser } from "@/lib/current-user";
 
+type TxClient = Omit<
+  typeof prisma,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends"
+>;
+
 function orderedPair(userId1: string, userId2: string) {
   return userId1 < userId2
     ? { userAId: userId1, userBId: userId2 }
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
 
   const pair = orderedPair(friendRequest.senderId, friendRequest.receiverId);
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: TxClient) => {
     const friendship = await tx.friendship.upsert({
       where: {
         userAId_userBId: pair,
