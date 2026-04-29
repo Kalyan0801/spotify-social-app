@@ -76,9 +76,12 @@ export async function GET() {
       }),
     ]);
 
+  type FriendshipWithUserB = (typeof friendshipsA)[number];
+  type FriendshipWithUserA = (typeof friendshipsB)[number];
+
   const friends = [
-    ...friendshipsA.map((friendship) => friendship.userB),
-    ...friendshipsB.map((friendship) => friendship.userA),
+    ...friendshipsA.map((friendship: FriendshipWithUserB) => friendship.userB),
+    ...friendshipsB.map((friendship: FriendshipWithUserA) => friendship.userA),
   ];
 
   return NextResponse.json({
