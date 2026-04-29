@@ -4,6 +4,21 @@ import { RefreshSpotifyButton } from "./RefreshSpotifyButton";
 import { prisma } from "@/lib/prisma";
 import { FriendsPanel } from "./FriendsPanel";
 
+type TopArtistItem = {
+  id: string;
+  image: string | null;
+  name: string;
+  rank: number;
+};
+
+type TopTrackItem = {
+  id: string;
+  image: string | null;
+  name: string;
+  rank: number;
+  artistNames: string[];
+};
+
 type DashboardPageProps = {
   searchParams?: Promise<{ friend?: string }> | { friend?: string };
 };
@@ -80,6 +95,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const activeUser = viewingUser ?? myTopData;
 
+  if (!activeUser) {
+    redirect("/");
+  }
+
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white">
       <div className="mx-auto max-w-4xl space-y-8">
@@ -132,7 +151,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
             {activeUser?.topArtists.length ? (
               <div className="space-y-3">
-                {activeUser.topArtists.map((artist) => (
+                {(activeUser.topArtists as TopArtistItem[]).map((artist: TopArtistItem) => (
                   <div key={artist.id} className="flex items-center gap-3">
                     {artist.image ? (
                       <img
@@ -161,7 +180,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
             {activeUser?.topTracks.length ? (
               <div className="space-y-3">
-                {activeUser.topTracks.map((track) => (
+                {(activeUser.topTracks as TopTrackItem[]).map((track: TopTrackItem) => (
                   <div key={track.id} className="flex items-center gap-3">
                     {track.image ? (
                       <img
