@@ -58,6 +58,10 @@ const spotifyDiagnosticFetch: typeof fetch = async (input, init) => {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  pages: {
+    signIn: "/",
+    error: "/",
+  },
   providers: [
     Spotify({
       clientId: process.env.AUTH_SPOTIFY_ID!,

@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 
-export function RefreshSpotifyButton() {
+type RefreshSpotifyButtonProps = {
+  actions?: ReactNode;
+};
+
+export function RefreshSpotifyButton({ actions }: RefreshSpotifyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -28,14 +33,17 @@ export function RefreshSpotifyButton() {
   }
 
   return (
-    <div className="mt-6">
-      <button
-        onClick={refreshProfile}
-        disabled={loading}
-        className="rounded-full bg-green-500 px-5 py-2 font-medium text-black disabled:opacity-60"
-      >
-        {loading ? "Refreshing..." : "Refresh Spotify Data"}
-      </button>
+    <div className="mt-6 space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={refreshProfile}
+          disabled={loading}
+          className="rounded-full bg-green-500 px-5 py-2 font-medium text-black transition hover:bg-green-400 disabled:opacity-60"
+        >
+          {loading ? "Refreshing..." : "Refresh Spotify Data"}
+        </button>
+        {actions}
+      </div>
 
       {message ? <p className="mt-3 text-sm text-neutral-300">{message}</p> : null}
     </div>
