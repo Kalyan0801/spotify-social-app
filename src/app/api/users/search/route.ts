@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       id: true,
       displayName: true,
       email: true,
+      spotifyUserId: true,
       image: true,
     },
     take: 10,

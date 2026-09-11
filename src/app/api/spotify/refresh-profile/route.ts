@@ -1,5 +1,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { ensureArtistLastFmCached } from "@/lib/artist-tags";
+import { ensureTrackTagsCached } from "@/lib/track-tags";
+import { invalidateGemRecommendationCachesForUser } from "@/lib/gem-recommendations";
 import { NextResponse } from "next/server";
 
 type SpotifyArtist = {
@@ -67,15 +70,6 @@ export async function POST() {
     fetchTopItems<SpotifyTrack>(session.accessToken, "tracks", timeRange),
   ]);
 
-  console.info("[spotify-refresh] popularity summary", {
-    artistPopularityCount: artists.filter((artist) => artist.popularity != null)
-      .length,
-    trackPopularityCount: tracks.filter((track) => track.popularity != null)
-      .length,
-    firstArtistPopularity: artists[0]?.popularity ?? null,
-    firstTrackPopularity: tracks[0]?.popularity ?? null,
-  });
-
   await prisma.$transaction([
     prisma.topArtist.deleteMany({
       where: {
@@ -119,9 +113,31 @@ export async function POST() {
     }),
   ]);
 
+  const lastFmArtists = await ensureArtistLastFmCached(
+    artists.map((artist) => ({
+      spotifyArtistId: artist.id,
+      name: artist.name,
+    }))
+  );
+
+  const lastFmTracks = await ensureTrackTagsCached(
+    tracks.map((track) => ({
+      spotifyTrackId: track.id,
+      name: track.name,
+      artistNames: track.artists.map((artist) => artist.name),
+    }))
+  );
+
+  // Tops changed — drop stale gem song picks for this user.
+  await invalidateGemRecommendationCachesForUser(user.id);
+
   return NextResponse.json({
     ok: true,
     artistsStored: artists.length,
     tracksStored: tracks.length,
+    lastFmArtistsRefreshed: lastFmArtists.refreshed,
+    lastFmArtistsSkipped: lastFmArtists.skipped,
+    lastFmTracksRefreshed: lastFmTracks.refreshed,
+    lastFmTracksSkipped: lastFmTracks.skipped,
   });
 }

@@ -1,0 +1,27 @@
+/* React Flow Controls — Tailwind preflight washes out the default light theme. */
+.graph-controls.react-flow__controls {
+  background: #171717;
+  box-shadow: none;
+}
+
+.graph-controls .react-flow__controls-button {
+  background: #171717;
+  border: none;
+  border-bottom: 1px solid #404040;
+  width: 28px;
+  height: 28px;
+}
+
+.graph-controls .react-flow__controls-button:hover {
+  background: #262626;
+}
+
+.graph-controls .react-flow__controls-button:last-child {
+  border-bottom: none;
+}
+
+.graph-controls .react-flow__controls-button svg {
+  fill: #e5e5e5;
+  max-width: 14px;
+  max-height: 14px;
+}

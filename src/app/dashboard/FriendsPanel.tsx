@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type UserSummary = {
   id: string;
   displayName: string | null;
   email: string | null;
+  spotifyUserId: string;
   image: string | null;
 };
 
@@ -20,21 +22,17 @@ type OutgoingRequest = {
   receiver: UserSummary;
 };
 
-type FriendsPanelProps = {
-  selectedFriendId?: string | null;
-};
-
-export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
+export function FriendsPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedFriendId = searchParams.get("friend");
+  const [pendingFriendId, setPendingFriendId] = useState<string | null>(null);
+  const [isNavigating, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserSummary[]>([]);
   const [friends, setFriends] = useState<UserSummary[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>(
-    []
-  );
-  const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequest[]>(
-    []
-  );
+  const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<OutgoingRequest[]>([]);
   const [message, setMessage] = useState("");
 
   async function loadFriends() {
@@ -70,9 +68,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
 
     const res = await fetch("/api/friends/request", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ receiverId }),
     });
 
@@ -94,9 +90,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
 
     const res = await fetch("/api/friends/respond", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ requestId, action }),
     });
 
@@ -107,7 +101,10 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
       return;
     }
 
-    setMessage(action === "accept" ? "Friend request accepted." : "Request rejected.");
+    setMessage(
+      action === "accept" ? "Friend request accepted." : "Request rejected."
+    );
+
     await loadFriends();
   }
 
@@ -121,14 +118,6 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
     };
   }, []);
 
-  function viewFriend(friendId: string) {
-    router.push(`/dashboard?friend=${encodeURIComponent(friendId)}`);
-  }
-
-  function viewMyProfile() {
-    router.push("/dashboard");
-  }
-
   return (
     <section className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
       <h2 className="mb-4 text-xl font-semibold">Friends</h2>
@@ -137,6 +126,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
         <label className="mb-2 block text-sm text-neutral-400">
           Search users
         </label>
+
         <input
           value={query}
           onChange={(event) => searchUsers(event.target.value)}
@@ -152,6 +142,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
                 className="flex items-center justify-between rounded-xl border border-neutral-800 bg-black p-3"
               >
                 <UserRow user={user} />
+
                 <button
                   onClick={() => sendRequest(user.id)}
                   className="rounded-full bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400"
@@ -163,39 +154,57 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
           </div>
         ) : null}
 
-        {message ? <p className="mt-3 text-sm text-neutral-300">{message}</p> : null}
+        {message ? (
+          <p className="mt-3 text-sm text-neutral-300">{message}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div>
           <div className="mb-3 flex items-center justify-between gap-2">
             <h3 className="font-medium">Your Friends</h3>
-            <button
-              onClick={viewMyProfile}
-              className="rounded-full border border-neutral-700 px-3 py-1 text-xs transition hover:bg-neutral-800"
+            <Link
+              href="/dashboard"
+              className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-200 transition hover:bg-neutral-800"
             >
               View my profile
-            </button>
+            </Link>
           </div>
+
           {friends.length ? (
             <div className="space-y-2">
               {friends.map((friend) => (
                 <div
                   key={friend.id}
-                  className={`rounded-xl border bg-black p-3 ${
+                  className={`rounded-xl border bg-black p-3 transition ${
                     selectedFriendId === friend.id
                       ? "border-green-500"
-                      : "border-neutral-800"
+                      : "border-neutral-800 hover:border-green-500"
                   }`}
                 >
-                  <div className="flex min-w-0 items-center justify-between gap-3 pr-1">
-                    <UserRow user={friend} />
+                  <UserRow user={friend} />
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
-                      onClick={() => viewFriend(friend.id)}
-                      className="shrink-0 rounded-full border border-neutral-700 px-3 py-1 text-xs transition hover:bg-neutral-800"
+                      type="button"
+                      disabled={isNavigating && pendingFriendId === friend.id}
+                      onClick={() => {
+                        setPendingFriendId(friend.id);
+                        startTransition(() => {
+                          router.push(`/friends/${friend.id}`);
+                        });
+                      }}
+                      className="rounded-full border border-green-600 px-3 py-1 text-xs text-green-400 transition hover:bg-green-950/40 disabled:cursor-wait disabled:opacity-70"
                     >
-                      {selectedFriendId === friend.id ? "Viewing" : "View"}
+                      {isNavigating && pendingFriendId === friend.id
+                        ? "Opening…"
+                        : "View compatibility"}
                     </button>
+                    <Link
+                      href={`/dashboard?friend=${friend.id}`}
+                      className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-200 transition hover:bg-neutral-800"
+                    >
+                      {selectedFriendId === friend.id ? "Viewing" : "View profile"}
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -207,6 +216,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
 
         <div>
           <h3 className="mb-3 font-medium">Incoming Requests</h3>
+
           {incomingRequests.length ? (
             <div className="space-y-2">
               {incomingRequests.map((request) => (
@@ -215,6 +225,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
                   className="rounded-xl border border-neutral-800 bg-black p-3"
                 >
                   <UserRow user={request.sender} />
+
                   <div className="mt-3 flex gap-2">
                     <button
                       onClick={() => respondToRequest(request.id, "accept")}
@@ -222,6 +233,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
                     >
                       Accept
                     </button>
+
                     <button
                       onClick={() => respondToRequest(request.id, "reject")}
                       className="rounded-full border border-neutral-700 px-3 py-1 text-sm"
@@ -239,6 +251,7 @@ export function FriendsPanel({ selectedFriendId = null }: FriendsPanelProps) {
 
         <div>
           <h3 className="mb-3 font-medium">Sent Requests</h3>
+
           {outgoingRequests.length ? (
             <div className="space-y-2">
               {outgoingRequests.map((request) => (
@@ -279,7 +292,7 @@ function UserRow({ user }: { user: UserSummary }) {
         <p className="truncate font-medium">
           {user.displayName ?? "Unnamed user"}
         </p>
-        <p className="truncate text-xs text-neutral-400">{user.email}</p>
+        <p className="truncate text-xs text-neutral-400">@{user.spotifyUserId}</p>
       </div>
     </div>
   );

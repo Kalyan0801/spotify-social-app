@@ -1,5 +1,6 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { RefreshSpotifyButton } from "./RefreshSpotifyButton";
 import { prisma } from "@/lib/prisma";
 import { FriendsPanel } from "./FriendsPanel";
@@ -117,19 +118,27 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           ) : null}
           <RefreshSpotifyButton
             actions={
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
-                <button
-                  type="submit"
-                  className="rounded-full border border-neutral-700 px-5 py-2 transition hover:bg-neutral-800"
+              <>
+                <Link
+                  href="/graph"
+                  className="rounded-full bg-green-500 px-5 py-2 font-medium text-black transition hover:bg-green-400"
                 >
-                  Sign out
-                </button>
-              </form>
+                  View Music Graph
+                </Link>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/" });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="rounded-full border border-neutral-700 px-5 py-2 transition hover:bg-neutral-800"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </>
             }
           />
         </div>
@@ -208,9 +217,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </section>
         </div>
 
-        <FriendsPanel
-          selectedFriendId={viewingUserId === currentUser.id ? null : viewingUserId}
-        />
+        <FriendsPanel />
       </div>
     </main>
   );

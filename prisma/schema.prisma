@@ -96,3 +96,62 @@ model Friendship {
 
   @@unique([userAId, userBId])
 }
+
+/// Cached Last.fm tags for a Spotify artist (shared across users).
+model ArtistTagCache {
+  id              String   @id @default(cuid())
+  spotifyArtistId String   @unique
+  artistName      String
+  tags            String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Cached Last.fm similar artists for a Spotify artist (shared across users).
+model ArtistSimilarCache {
+  id              String   @id @default(cuid())
+  spotifyArtistId String   @unique
+  artistName      String
+  /// JSON array: [{ "name": string, "match": number }] where match is 0–100 from Last.fm
+  similars        Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Cached Last.fm tags for a Spotify track (shared across users).
+model TrackTagCache {
+  id             String   @id @default(cuid())
+  spotifyTrackId String   @unique
+  trackName      String
+  artistName     String
+  tags           String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// Cached Last.fm top tracks (+ tags) for a Spotify artist (for gem recs).
+model ArtistTopTracksCache {
+  id              String   @id @default(cuid())
+  spotifyArtistId String   @unique
+  artistName      String
+  /// JSON: [{ "name": string, "tags": string[] }]
+  tracks          Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Cached gem song recommendations for a viewer looking at a friend's artist.
+model GemRecommendationCache {
+  id              String   @id @default(cuid())
+  viewerUserId    String
+  friendUserId    String
+  spotifyArtistId String
+  artistName      String
+  /// JSON: GemTrackRecommendation[]
+  recommendations Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([viewerUserId, friendUserId, spotifyArtistId])
+  @@index([viewerUserId, friendUserId])
+}
